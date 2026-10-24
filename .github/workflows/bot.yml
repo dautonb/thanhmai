@@ -1,0 +1,67 @@
+name: Mai Bot
+
+on:
+  # Chạy thủ công lần đầu, và để mỗi lượt tự kích hoạt lượt kế tiếp
+  workflow_dispatch:
+  # Dự phòng: mỗi giờ thử khởi động lại nếu chuỗi tự nối bị đứt
+  # (nếu đang có lượt chạy thì lượt mới tự xếp hàng chờ, không chạy chồng)
+  schedule:
+    - cron: "15 * * * *"
+
+# Chỉ cho phép 1 lượt chạy cùng lúc. Lượt mới xếp hàng chờ, KHÔNG hủy lượt đang chạy,
+# nhờ vậy 2 bot không bao giờ tranh nhau getUpdates (lỗi 409).
+concurrency:
+  group: linh-bot
+  cancel-in-progress: false
+
+permissions:
+  actions: write    # Để tự kích hoạt lượt kế tiếp
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350   # Giới hạn cứng của GitHub là 360 phút
+
+    env:
+      # Toàn bộ khóa bí mật + nội dung nhân vật lấy từ Settings > Secrets (repo public không lộ gì)
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      CHAT_ID: ${{ secrets.CHAT_ID }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      STATE_REPO: ${{ secrets.STATE_REPO }}
+      STATE_REPO_TOKEN: ${{ secrets.STATE_REPO_TOKEN }}
+      SYSTEM_PROMPT: ${{ secrets.SYSTEM_PROMPT }}
+      STYLE_REMINDER: ${{ secrets.STYLE_REMINDER }}
+      PROACTIVE_INSTRUCTION: ${{ secrets.PROACTIVE_INSTRUCTION }}
+      RUN_SECONDS: "20400"        # Bot tự thoát sau 5h40m để còn kịp nối lượt kế tiếp
+      TZ_OFFSET_HOURS: "7"        # Múi giờ Việt Nam (UTC+7) để tính giờ yên lặng
+      PYTHONUNBUFFERED: "1"       # In log ra ngay, không bị giữ đệm
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Cài Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Cài thư viện
+        run: pip install -r requirements.txt
+
+      - name: Chạy bot
+        id: bot
+        run: |
+          start=$(date +%s)
+          python bot.py && code=0 || code=$?
+          echo "elapsed=$(( $(date +%s) - start ))" >> "$GITHUB_OUTPUT"
+          exit $code
+
+      # Tự kích hoạt lượt kế tiếp. Chỉ làm khi lượt này đã chạy > 5 phút:
+      # nếu bot chết ngay lúc khởi động (sai secret...) thì DỪNG nối để không lặp vô hạn
+      # và không chạy khi bạn bấm Cancel -> đây cũng là cách dừng bot.
+      - name: Kích hoạt lượt kế tiếp
+        if: ${{ (success() || failure()) && steps.bot.outputs.elapsed > 300 }}
+        run: gh workflow run bot.yml --repo "$GITHUB_REPOSITORY"
