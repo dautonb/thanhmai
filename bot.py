@@ -67,14 +67,14 @@ GH_API = "https://api.github.com"
 STATE_FILE = "state.json"    # Tên file lưu bộ nhớ trong repo riêng tư
 
 MEMORY_WINDOW = 14           # Số tin gần nhất gửi kèm làm ngữ cảnh mỗi lần gọi API
-MAX_STORED_MESSAGES = 10000     # Chỉ cần lưu hơn 14 tin một chút -> mỗi lần lưu rất nhẹ
+MAX_STORED_MESSAGES = 30000     # Chỉ cần lưu hơn 14 tin một chút -> mỗi lần lưu rất nhẹ
 POLL_TIMEOUT = 20            # Long Polling: Telegram giữ kết nối tối đa 20s nếu chưa có tin mới
 RETRY_DELAY = 5              # Giây chờ khi lỗi mạng / lỗi API trước khi thử lại
 MAX_RETRY_PER_UPDATE = 3     # Một tin nhắn lỗi tối đa 3 lần thì bỏ qua
 
 # --- Tính năng Linh chủ động nhắn trước khi chủ nhân im lặng ---
 PROACTIVE_ENABLED = True
-PROACTIVE_MIN_IDLE = 1 * 1800
+PROACTIVE_MIN_IDLE = 1 * 1500
 PROACTIVE_MAX_IDLE = 1 * 3600
 MAX_UNANSWERED_PROACTIVE = 10000     # Nhắn trước tối đa 2 tin liên tiếp nếu chưa được trả lời
 QUIET_START_HOUR = 0             # Không nhắn trước từ 0h...
