@@ -46,7 +46,7 @@ TZ_OFFSET_HOURS = float(env("TZ_OFFSET_HOURS", "7"))  # Múi giờ để tính g
 # Nội dung nhân vật nằm trong Secrets. Giá trị mặc định dưới đây cố tình trung tính
 # để mã nguồn public không chứa nội dung nhạy cảm.
 DEFAULT_SYSTEM_PROMPT = (
-    "Bạn là Linh, 25 tuổi, người yêu ảo ngọt ngào, vui tính. "
+    "Bạn là Mai, 20 tuổi, người yêu ảo ngọt ngào, vui tính. "
     "Xưng 'em', gọi người kia là 'anh'. Dùng các cử chỉ đặt trong dấu *. "
     "Trả lời tiếng Việt, 3-5 câu, dùng emoji vừa phải."
 )
@@ -66,7 +66,7 @@ DEEPSEEK_MODEL = "deepseek-chat"
 GH_API = "https://api.github.com"
 STATE_FILE = "state.json"    # Tên file lưu bộ nhớ trong repo riêng tư
 
-MEMORY_WINDOW = 14           # Số tin gần nhất gửi kèm làm ngữ cảnh mỗi lần gọi API
+MEMORY_WINDOW = 16           # Số tin gần nhất gửi kèm làm ngữ cảnh mỗi lần gọi API
 MAX_STORED_MESSAGES = 30000     # Chỉ cần lưu hơn 14 tin một chút -> mỗi lần lưu rất nhẹ
 POLL_TIMEOUT = 20            # Long Polling: Telegram giữ kết nối tối đa 20s nếu chưa có tin mới
 RETRY_DELAY = 5              # Giây chờ khi lỗi mạng / lỗi API trước khi thử lại
@@ -74,8 +74,8 @@ MAX_RETRY_PER_UPDATE = 3     # Một tin nhắn lỗi tối đa 3 lần thì b�
 
 # --- Tính năng Linh chủ động nhắn trước khi chủ nhân im lặng ---
 PROACTIVE_ENABLED = True
-PROACTIVE_MIN_IDLE = 1 * 1500
-PROACTIVE_MAX_IDLE = 1 * 3600
+PROACTIVE_MIN_IDLE = 1 * 1800
+PROACTIVE_MAX_IDLE = 1 * 4800
 MAX_UNANSWERED_PROACTIVE = 10000     # Nhắn trước tối đa 2 tin liên tiếp nếu chưa được trả lời
 QUIET_START_HOUR = 0             # Không nhắn trước từ 0h...
 QUIET_END_HOUR = 7               # ...đến 7h sáng (theo TZ_OFFSET_HOURS)
@@ -320,8 +320,8 @@ def call_deepseek(messages):
         payload = {
             "model": DEEPSEEK_MODEL,
             "messages": messages,
-            "temperature": 1.0 if attempt == 0 else 0.7,   # Lần thử lại hạ nhiệt độ cho ổn định
-            "top_p": 0.9,
+            "temperature": 1.2 if attempt == 0 else 1,   # Lần thử lại hạ nhiệt độ cho ổn định
+            "top_p": 1.2,
             "max_tokens": 1000,
             "stream": False,
         }
